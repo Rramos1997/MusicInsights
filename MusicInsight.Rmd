@@ -1,7 +1,9 @@
 ---
 title: "Music Insights"
 author: "Robert Ramos"
-output: html_notebook
+output:
+  html_document:
+    df_print: paged
 ---
 
 First, we need tidyverse to handle data importing and wrangling
@@ -9,6 +11,7 @@ First, we need tidyverse to handle data importing and wrangling
 ```{r}
 install.packages("tidyverse")
 library("tidyverse")
+library("readr")
 
 survey<-read_csv("https://raw.githubusercontent.com/introdsci/MusicSurvey/master/music-survey.csv")
 preferences<-read_csv("https://raw.githubusercontent.com/introdsci/MusicSurvey/master/preferences-survey.csv")
@@ -22,11 +25,41 @@ nrow(preferences)
 colnames(preferences)
 ```
 
-Cleaning data frame column names
+Cleaning survey data frame column names
 ```{r}
 colnames(survey)[colnames(survey)=="First, we are going to create a pseudonym for you to keep this survey anonymous (more or less). Which pseudonym generator would you prefer?"]<-"generator_name"
 
 colnames(survey)[colnames(survey)=="What is your pseudonym?"]<-"pseudonym"
 
+colnames(survey)[colnames(survey)=="Year you were born (YYYY)"]<-"Birth_Year"
+
+colnames(survey)[colnames(survey)=="Which musical instruments/talents do you play? (Select all that apply)"]<-"Musical_Talents"
+
+colnames(survey)[colnames(survey)=="Link to song (on Youtube or Vimeo)"]<-"Link"
 ```
 
+This is when I make 2 tables, one for Person and one for FavoriteSong.
+```{r}
+library("dplyr")
+library("tidyr")
+
+Person<-tibble(pseudonym = survey$pseudonym, generator_Name = survey$generator_name, Sex = survey$Sex, major = survey$Major, AcademicYear = survey$"Academic Year", Birth_Year = survey$Birth_Year)
+
+Person$AcademicYear<-as.factor(Person$AcademicYear)
+Person$major<-as.factor(Person$major)
+
+levels(Person$major)[levels(Person$major) =="Computer information Systems"] <- "Computer Information Systems"
+
+
+FavoriteSong<-tibble(pseudonym = survey$pseudonym, Song = survey$Song, Artist = survey$Artist, Link = survey$Link)
+
+
+preferences<-gather(preferences,Artist_Song, rating, 3:45)
+
+Ratings<-tibble(Pseudonym = preferences$"What was your pseudonym?", Artist_Song = preferences$Artist_Song, Ratings = preferences$rating)
+```
+
+```{r}
+survey$Timestamp<-as.POSIXlt(parse_datetime(survey$Timestamp,format = "%m/%d/%y %H:%M"))
+
+```
