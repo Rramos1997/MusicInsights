@@ -1,0 +1,16 @@
+---
+title: "Music Insights part 2"
+output: html_document
+---
+
+```{r}
+library("tidyverse")
+data("storms")
+view(storms)
+
+
+ggplot(storms, aes(x = pressure , y = wind)) + geom_point()
+category_model<- lm()
+
+
+```

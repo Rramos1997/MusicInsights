@@ -4,14 +4,16 @@ author: "Robert Ramos"
 output:
   html_document:
     df_print: paged
+  pdf_document: default
 ---
 
 First, we need tidyverse to handle data importing and wrangling
 (when uploading csv file avoid absolute paths, use relative paths)
 ```{r}
-install.packages("tidyverse")
+#install.packages("tidyverse")
 library("tidyverse")
 library("readr")
+library("ggplot2")
 
 survey<-read_csv("https://raw.githubusercontent.com/introdsci/MusicSurvey/master/music-survey.csv")
 preferences<-read_csv("https://raw.githubusercontent.com/introdsci/MusicSurvey/master/preferences-survey.csv")
@@ -51,15 +53,53 @@ Person$major<-as.factor(Person$major)
 levels(Person$major)[levels(Person$major) =="Computer information Systems"] <- "Computer Information Systems"
 
 
-FavoriteSong<-tibble(pseudonym = survey$pseudonym, Song = survey$Song, Artist = survey$Artist, Link = survey$Link)
+FavoriteSong<-tibble(Pseudonym = survey$pseudonym, Song = survey$Song, Artist = survey$Artist, Link = survey$Link)
 
 
 preferences<-gather(preferences,Artist_Song, rating, 3:45)
 
 Ratings<-tibble(Pseudonym = preferences$"What was your pseudonym?", Artist_Song = preferences$Artist_Song, Ratings = preferences$rating)
+
+
+ggplot(Ratings, aes(x = Ratings) ) + geom_histogram(binwidth = 1)
+ggplot(Ratings, aes(x = Ratings, y = Pseudonym)) + geom_bin2d() #+scale_x_discrete(limits = c())
 ```
 
+
 ```{r}
-survey$Timestamp<-as.POSIXlt(parse_datetime(survey$Timestamp,format = "%m/%d/%y %H:%M"))
+survey$Timestamp<-as.POSIXlt(parse_datetime(as.character(survey$Timestamp),format = "%y/%m/%d %H:%M:%S"))
+
+```
+
+
+```{r}
+a<-inner_join(FavoriteSong, Ratings, by = "Pseudonym")
+a
+##Left- only people who provided their favorite song
+##Right- only people who provided ratings
+##Full- Everyone, but possible missing "matches"
+##Inner- only people who provided both their song and the ratigns for the songs
+ 
+```
+
+For people who gave more than 1 response, this is to get the earlier ratings
+```{r}
+#earliest_time<-min(preferences$Timestamp)##Not finished
+
+
+```
+
+Now this section will fix the naming so it can read tabs and spaces
+```{r}
+Ratings$Artist_Song<- str_replace_all(Ratings$Artist_Song,
+                                      pattern = "\t",
+                                      replacement = " ")
+
+favorite_rating <- Ratings %>%
+  left_join(FavoriteSong, by = "Pseudonym") %>%
+  filter(Artist_Song == paste(Artist,Song)) %>%
+  select(Pseudonym, Artist_Song,Ratings)
+
+print(favorite_rating)
 
 ```
