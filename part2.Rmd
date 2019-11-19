@@ -5,12 +5,28 @@ output: html_document
 
 ```{r}
 library("tidyverse")
-data("storms")
-view(storms)
+library("knitr")
+purl("MusicInsight.Rmd", output = "part1.r")
+source("part1.r")
 
+person$averageRating<-sapply(person$pseudonym, function(name){
+  fav<-tibble(favorite_rating$Ratings[favorite_rating$Pseudonym])
+  otherSongs<-favorite_rating$Ratings[favorite_rating$Pseudonym]
+  return(mean(otherSongs))
+  }
+)
+#cor.test<-(x = Person$averageRating,)
 
-ggplot(storms, aes(x = pressure , y = wind)) + geom_point()
-category_model<- lm()
+simple_model<-lm(person, formula = averageRating ~ generator_Name + Sex + major + AcedemicYear + Birth_Year)
+summary(simple_model)
+
+set.seed(385)
+Sample<-CreateDataPartition(air$Ozone,p = 0.7, list = false)
+train<-air[sample, ]
+test<- air[-sample, ]
+
+#ggplot(storms, aes(x = pressure , y = wind)) + geom_point()
+#category_model<- lm()
 
 
 ```
