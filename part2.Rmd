@@ -6,27 +6,38 @@ output: html_document
 ```{r}
 library("tidyverse")
 library("knitr")
+##This function will pull in our part one of Music Insight and use it as a source
 purl("MusicInsight.Rmd", output = "part1.r")
 source("part1.r")
+library("caret")
 
-person$averageRating<-sapply(person$pseudonym, function(name){
-  fav<-tibble(favorite_rating$Ratings[favorite_rating$Pseudonym])
-  otherSongs<-favorite_rating$Ratings[favorite_rating$Pseudonym]
+#This function will go through each row of the Pseudonym column in the person table and make a vector of each persons rating for all songs that wasn't their own. After that it returns the mean of the vector to get their average.
+
+Person$averageRating<-sapply(Person$pseudonym, 
+                             function(name){
+  fav<-favorite_rating$Artist_Song[favorite_rating$Pseudonym==name]
+  otherSongs<-Ratings$Ratings[Ratings$Artist_Song != fav & Ratings$Pseudonym == name]
   return(mean(otherSongs))
   }
 )
-#cor.test<-(x = Person$averageRating,)
 
-simple_model<-lm(person, formula = averageRating ~ generator_Name + Sex + major + AcedemicYear + Birth_Year)
+#Here I make a simple model that will show all of the other variables in the Person table and their correlation to averageRating to see if they affect it. We want a p-value < 0.5 to determine if they correlate. I also run a function to omit all NAN values from the averageRating column.
+
+Person<-na.omit(Person, cols = "averageRating", invert = FALSE)
+
+simple_model<-lm(Person, formula = averageRating ~ Sex + major + AcademicYear + Birth_Year)
 summary(simple_model)
 
+#Here is where I do a sample of 75% for the training model and a sample of 25% for the testing model. If the p-values are < 0.05 then we have a variable with direct correlation to averageRating.
+
 set.seed(385)
-Sample<-CreateDataPartition(air$Ozone,p = 0.7, list = false)
-train<-air[sample, ]
-test<- air[-sample, ]
-
-#ggplot(storms, aes(x = pressure , y = wind)) + geom_point()
-#category_model<- lm()
-
+Sample<-createDataPartition(Person$averageRating,p = 0.75, list = FALSE)
+train<-Person[Sample, ]
+test<- Person[-Sample, ]
+train_model<-lm(train,formula = averageRating ~ generator_Name + Sex + major + AcademicYear + Birth_Year)
+summary(train_model)
+test_model<-lm(test,formula = averageRating ~ generator_Name + Sex + major + AcademicYear + Birth_Year)
+summary(test_model)
+#Since none of the variables have a p-value < 0.05 they aren't significant predictors for the variable averageRating.
 
 ```
